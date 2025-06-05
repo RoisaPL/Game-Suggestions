@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameSuggest - Fórum de Sugestões de Jogos</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS */
+        :root {
+            --primary: #ff66b2;
+            --primary-dark: #e60073;
+            --secondary: #ff99cc;
+            --accent: #ff3385;
+            --light: #fff0f5;
+            --danger: #ff4757;
+            --success: #2ecc71;
+            --text: #333;
+            --text-light: #666;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--text);
+            line-height: 1.6;
+            background-image: radial-gradient(circle at 10% 20%, rgba(255, 102, 178, 0.1) 0%, rgba(255, 102, 178, 0.05) 90%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            color: var(--primary-dark);
+            padding: 20px 0;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 102, 178, 0.2);
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+        }
+
+        h1 {
+            margin-bottom: 8px;
+            font-size: 2rem;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .admin-icon {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background-color: var(--primary);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 102, 178, 0.5);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .admin-icon:hover {
+            transform: scale(1.1);
+            background-color: var(--primary-dark);
+        }
+
+        .admin-panel {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+            width: 300px;
+            z-index: 999;
+            display: none;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .admin-panel.show {
+            display: block;
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .admin-panel h3 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--text-light);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        textarea,
+        input[type="search"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ffccdd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        textarea:focus,
+        input[type="search"]:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 102, 178, 0.3);
+        }
+
+        button i {
+            margin-right: 8px;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+        }
+
+        .btn-danger:hover {
+            background-color: #ff2d3b;
+        }
+
+        .btn-success {
+            background-color: var(--success);
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .suggestion-form {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(255, 102, 178, 0.1);
+            margin-bottom: 40px;
+            border: 1px solid #ffd6e7;
+        }
+
+        .suggestion-form h2 {
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .suggestion-form h2 i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        .search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(255, 102, 178, 0.1);
+            margin-bottom: 30px;
+            border: 1px solid #ffd6e7;
+        }
+
+        .search-container h2 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-container h2 i {
+            margin-right: 10px;
+            color: var(--primary);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+        }
+
+        .games-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+        }
+
+        .game-card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(255, 102, 178, 0.1);
+            padding: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid #ffd6e7;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 102, 178, 0.2);
+        }
+
+        .game-card h3 {
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+            font-size: 1.4rem;
+        }
+
+        .game-card p {
+            margin-bottom: 15px;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .game-card .likes {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .game-card .like-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--secondary);
+            padding: 5px;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .game-card .like-btn.liked {
+            color: var(--danger);
+            transform: scale(1.1);
+        }
+
+        .game-card .like-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .game-card .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .game-card:hover .delete-btn {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .game-card .delete-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .no-games {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(255, 102, 178, 0.1);
+            color: var(--text-light);
+        }
+
+        .no-games i {
+            font-size: 50px;
+            color: var(--secondary);
+            margin-bottom: 20px;
+        }
+
+        .floating-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+        }
+
+        .floating-notification.show {
+            transform: translateX(0);
+        }
+
+        .floating-notification.error {
+            background-color: var(--danger);
+        }
+
+        .floating-notification i {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .games-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .admin-panel {
+                width: calc(100% - 40px);
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML -->
+    <header>
+        <div class="container">
+            <h1><i class="fas fa-gamepad"></i> GameSuggest</h1>
+            <p>Sugira jogos e vote nos seus favoritos!</p>
+        </div>
+    </header>
+
+    <div class="admin-icon" id="adminIcon">
+        <i class="fas fa-lock"></i>
+    </div>
+
+    <div class="admin-panel" id="adminPanel">
+        <h3><i class="fas fa-user-shield"></i> Acesso Admin</h3>
+        <div class="form-group">
+            <label for="adminUsername"><i class="fas fa-user"></i> Usuário:</label>
+            <input type="text" id="adminUsername" placeholder="Digite o usuário admin">
+        </div>
+        <div class="form-group">
+            <label for="adminPassword"><i class="fas fa-key"></i> Senha:</label>
+            <input type="password" id="adminPassword" placeholder="Digite a senha">
+        </div>
+        <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+        <div id="adminStatus" style="margin-top: 15px; display: none;">
+            <button id="logoutBtn" class="btn-danger"><i class="fas fa-sign-out-alt"></i> Sair</button>
+        </div>
+    </div>
+
+    <div id="notification" class="floating-notification">
+        <i class="fas fa-check-circle"></i>
+        <span>Mensagem de notificação</span>
+    </div>
+
+    <div class="container">
+        <section class="suggestion-form">
+            <h2><i class="fas fa-plus-circle"></i> Sugerir um Jogo</h2>
+            <div class="form-group">
+                <label for="gameName">Nome do Jogo:</label>
+                <input type="text" id="gameName" placeholder="Ex: The Legend of Zelda: Breath of the Wild">
+            </div>
+            <div class="form-group">
+                <label for="gameDescription">Descrição (opcional):</label>
+                <textarea id="gameDescription" rows="3" placeholder="Descreva brevemente o jogo..."></textarea>
+            </div>
+            <button id="submitGame"><i class="fas fa-paper-plane"></i> Enviar Sugestão</button>
+        </section>
+
+        <section class="search-container">
+            <h2><i class="fas fa-search"></i> Pesquisar Jogos</h2>
+            <div class="search-box">
+                <input type="search" id="searchInput" placeholder="Digite o nome do jogo...">
+                <button id="searchBtn"><i class="fas fa-search"></i> Buscar</button>
+            </div>
+        </section>
+
+        <section class="games-list-section">
+            <h2 style="color: var(--primary-dark); margin-bottom: 20px;">
+                <i class="fas fa-list-ul"></i> Sugestões de Jogos
+            </h2>
+            <div id="gamesList" class="games-list">
+                <!-- Jogos serão adicionados aqui via JavaScript -->
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos do DOM
+            const adminIcon = document.getElementById('adminIcon');
+            const adminPanel = document.getElementById('adminPanel');
+            const loginBtn = document.getElementById('loginBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const adminStatus = document.getElementById('adminStatus');
+            const adminUsername = document.getElementById('adminUsername');
+            const adminPassword = document.getElementById('adminPassword');
+            const submitGameBtn = document.getElementById('submitGame');
+            const gameNameInput = document.getElementById('gameName');
+            const gameDescriptionInput = document.getElementById('gameDescription');
+            const gamesList = document.getElementById('gamesList');
+            const notification = document.getElementById('notification');
+            const searchInput = document.getElementById('searchInput');
+            const searchBtn = document.getElementById('searchBtn');
+
+            // Estado da aplicação
+            let isAdmin = false;
+            let games = JSON.parse(localStorage.getItem('games')) || [];
+            let adminPanelVisible = false;
+            let currentSearchTerm = '';
+
+            // Credenciais do admin
+            const ADMIN_CREDENTIALS = {
+                username: 'admin',
+                password: 'admin123'
+            };
+
+            // Função para mostrar notificação
+            function showNotification(message, isError = false) {
+                notification.querySelector('span').textContent = message;
+                notification.className = 'floating-notification';
+                notification.classList.add(isError ? 'error' : 'show');
+                
+                if (isError) {
+                    notification.querySelector('i').className = 'fas fa-exclamation-circle';
+                } else {
+                    notification.querySelector('i').className = 'fas fa-check-circle';
+                }
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            // Função para filtrar jogos por pesquisa
+            function filterGames(searchTerm) {
+                currentSearchTerm = searchTerm.toLowerCase();
+                renderGames();
+            }
+
+            // Função para renderizar os jogos
+            function renderGames() {
+                gamesList.innerHTML = '';
+                
+                // Filtra os jogos se houver termo de pesquisa
+                let filteredGames = games;
+                if (currentSearchTerm) {
+                    filteredGames = games.filter(game => 
+                        game.name.toLowerCase().includes(currentSearchTerm) || 
+                        (game.description && game.description.toLowerCase().includes(currentSearchTerm))
+                    );
+                }
+
+                if (filteredGames.length === 0) {
+                    gamesList.innerHTML = `
+                        <div class="no-games">
+                            <i class="fas fa-gamepad"></i>
+                            <h3>${currentSearchTerm ? 'Nenhum jogo encontrado' : 'Nenhum jogo sugerido ainda'}</h3>
+                            <p>${currentSearchTerm ? 'Tente outro termo de pesquisa' : 'Seja o primeiro a sugerir um jogo!'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Ordena por likes (decrescente)
+                const sortedGames = [...filteredGames].sort((a, b) => b.likes - a.likes);
+                
+                sortedGames.forEach((game, index) => {
+                    const gameCard = document.createElement('div');
+                    gameCard.className = 'game-card';
+                    gameCard.dataset.id = game.id;
+                    
+                    gameCard.innerHTML = `
+                        ${isAdmin ? `<button class="delete-btn" title="Remover jogo">×</button>` : ''}
+                        <h3>${game.name}</h3>
+                        ${game.description ? `<p>${game.description}</p>` : ''}
+                        <div class="likes">
+                            <button class="like-btn ${game.liked ? 'liked' : ''}" title="Curtir">
+                                <i class="fas fa-heart"></i>
+                            </button>
+                            <span>${game.likes} like${game.likes !== 1 ? 's' : ''}</span>
+                        </div>
+                    `;
+                    
+                    gamesList.appendChild(gameCard);
+                });
+
+                // Adiciona eventos aos botões de like
+                document.querySelectorAll('.like-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const gameId = this.closest('.game-card').dataset.id;
+                        toggleLike(gameId);
+                    });
+                });
+
+                // Adiciona eventos aos botões de deletar (se admin)
+                if (isAdmin) {
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const gameId = this.closest('.game-card').dataset.id;
+                            deleteGame(gameId);
+                        });
+                    });
+                }
+            }
+
+            // Função para adicionar um novo jogo
+            function addGame(name, description) {
+                // Verifica se o jogo já existe
+                const gameExists = games.some(
+                    game => game.name.toLowerCase() === name.toLowerCase()
+                );
+                
+                if (gameExists) {
+                    showNotification('Este jogo já foi sugerido!', true);
+                    return;
+                }
+                
+                const newGame = {
+                    id: Date.now().toString(),
+                    name,
+                    description,
+                    likes: 0,
+                    liked: false
+                };
+                
+                games.push(newGame);
+                saveGames();
+                renderGames();
+                
+                // Limpa os campos do formulário
+                gameNameInput.value = '';
+                gameDescriptionInput.value = '';
+                
+                showNotification('Jogo adicionado com sucesso!');
+            }
+
+            // Função para alternar like
+            function toggleLike(gameId) {
+                const gameIndex = games.findIndex(game => game.id === gameId);
+                
+                if (gameIndex !== -1) {
+                    if (games[gameIndex].liked) {
+                        games[gameIndex].likes--;
+                        games[gameIndex].liked = false;
+                    } else {
+                        games[gameIndex].likes++;
+                        games[gameIndex].liked = true;
+                    }
+                    
+                    saveGames();
+                    renderGames();
+                }
+            }
+
+            // Função para deletar um jogo
+            function deleteGame(gameId) {
+                if (!isAdmin) return;
+                
+                if (confirm('Tem certeza que deseja remover este jogo?')) {
+                    games = games.filter(game => game.id !== gameId);
+                    saveGames();
+                    renderGames();
+                    showNotification('Jogo removido com sucesso!');
+                }
+            }
+
+            // Função para salvar jogos no localStorage
+            function saveGames() {
+                localStorage.setItem('games', JSON.stringify(games));
+            }
+
+            // Função para login admin
+            function loginAdmin(username, password) {
+                if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                    isAdmin = true;
+                    adminStatus.style.display = 'block';
+                    adminUsername.value = '';
+                    adminPassword.value = '';
+                    showNotification('Login admin realizado com sucesso!');
+                    renderGames();
+                } else {
+                    showNotification('Credenciais incorretas!', true);
+                }
+            }
+
+            // Função para logout admin
+            function logoutAdmin() {
+                isAdmin = false;
+                adminStatus.style.display = 'none';
+                showNotification('Logout realizado com sucesso');
+                renderGames();
+            }
+
+            // Toggle do painel admin
+            adminIcon.addEventListener('click', function() {
+                adminPanelVisible = !adminPanelVisible;
+                
+                if (adminPanelVisible) {
+                    adminPanel.classList.add('show');
+                } else {
+                    adminPanel.classList.remove('show');
+                }
+            });
+
+            // Event Listeners
+            loginBtn.addEventListener('click', function() {
+                loginAdmin(adminUsername.value.trim(), adminPassword.value.trim());
+            });
+
+            logoutBtn.addEventListener('click', logoutAdmin);
+
+            submitGameBtn.addEventListener('click', function() {
+                const name = gameNameInput.value.trim();
+                const description = gameDescriptionInput.value.trim();
+                
+                if (name) {
+                    addGame(name, description);
+                } else {
+                    showNotification('Por favor, insira pelo menos o nome do jogo!', true);
+                }
+            });
+
+            // Pesquisar jogos
+            searchBtn.addEventListener('click', function() {
+                filterGames(searchInput.value.trim());
+            });
+
+            // Pesquisar ao pressionar Enter
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    filterGames(searchInput.value.trim());
+                }
+            });
+
+            // Permite enviar com Enter no campo de nome
+            gameNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitGameBtn.click();
+                }
+            });
+
+            // Fechar painel admin ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!adminPanel.contains(e.target) && e.target !== adminIcon) {
+                    adminPanelVisible = false;
+                    adminPanel.classList.remove('show');
+                }
+            });
+
+            // Renderiza os jogos ao carregar a página
+            renderGames();
+        });
+    </script>
+</body>
+</html>
