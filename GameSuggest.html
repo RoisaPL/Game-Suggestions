@@ -753,6 +753,20 @@
             // Renderiza os jogos ao carregar a página
             renderGames();
         });
+
+        fetch('GameSuggest-DATA.json')
+      .then(response => response.json())
+      .then(data => {
+        const lista = document.getElementById("lista-sugestoes");
+        data.forEach(jogo => {
+          const li = document.createElement("li");
+          li.textContent = jogo;
+          lista.appendChild(li);
+        });
+      })
+      .catch(err => {
+        console.error("Erro ao carregar sugestões:", err);
+      });
     </script>
 </body>
 </html>
