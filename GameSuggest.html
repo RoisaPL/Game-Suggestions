@@ -752,35 +752,6 @@
             // Renderiza os jogos ao carregar a página
             renderGames();
         });
-
-        const owner = "RoisaPL";
-        const repo = "Game-Suggestions";
-        const token = "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"; // Não use esse método em produção!
-        
-        function criarIssue(titulo, descricao) {
-          fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
-            method: "POST",
-            headers: {
-              "Authorization": `token ${token}`,
-              "Accept": "application/vnd.github+json"
-            },
-            body: JSON.stringify({
-              title: titulo,
-              body: descricao
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.html_url) {
-              alert("Issue criada! " + data.html_url);
-            } else {
-              alert("Erro: " + JSON.stringify(data));
-            }
-          });
-        }
-        
-        // Exemplo de uso, chame ao clicar em um botão, por exemplo:
-        criarIssue("Minha sugestão", "Sugiro este jogo incrível!");
     </script>
 </body>
 </html>
