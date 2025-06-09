@@ -5,9 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GameSuggest - Fórum de Sugestões de Jogos</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="https://i.postimg.cc/j2Cq79y2/Cheer1000.png" type="image/png">
     <style>
-        /* CSS */
+        /* CSS (mantido igual) */
         :root {
             --primary: #ff66b2;
             --primary-dark: #e60073;
@@ -479,16 +478,40 @@
             <h2 style="color: var(--primary-dark); margin-bottom: 20px;">
                 <i class="fas fa-list-ul"></i> Sugestões de Jogos
             </h2>
-            <div id="gamesList" class="games-list">
-                <!-- Jogos serão adicionados aqui via JavaScript -->
-            </div>
+            <div id="gamesList" class="games-list"></div>
         </section>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            addDoc, 
+            getDocs, 
+            deleteDoc, 
+            doc,
+            updateDoc
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAbO7QmevH0lPBwbuOtEX0MmaIDacGT2Qg",
+            authDomain: "gamesuggest-7a7a0.firebaseapp.com",
+            projectId: "gamesuggest-7a7a0",
+            storageBucket: "gamesuggest-7a7a0.appspot.com",
+            messagingSenderId: "558925709492",
+            appId: "1:558925709492:web:7ab9b1a6c84969d22157e1",
+            measurementId: "G-3GCY3W0622"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.firebaseDB = db;
+    </script>
+
     <script>
-        // JavaScript
         document.addEventListener('DOMContentLoaded', function() {
-            // Elementos do DOM
             const adminIcon = document.getElementById('adminIcon');
             const adminPanel = document.getElementById('adminPanel');
             const loginBtn = document.getElementById('loginBtn');
@@ -504,175 +527,127 @@
             const searchInput = document.getElementById('searchInput');
             const searchBtn = document.getElementById('searchBtn');
 
-            // Estado da aplicação
             let isAdmin = false;
-            let games = JSON.parse(localStorage.getItem('games')) || [];
+            let games = [];
             let adminPanelVisible = false;
             let currentSearchTerm = '';
 
-            // Credenciais do admin
             const ADMIN_CREDENTIALS = {
                 username: 'admin',
                 password: 'admin123'
             };
 
-            // Função para mostrar notificação
             function showNotification(message, isError = false) {
                 notification.querySelector('span').textContent = message;
                 notification.className = 'floating-notification';
                 notification.classList.add(isError ? 'error' : 'show');
-                
-                if (isError) {
-                    notification.querySelector('i').className = 'fas fa-exclamation-circle';
-                } else {
-                    notification.querySelector('i').className = 'fas fa-check-circle';
-                }
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 3000);
+                notification.querySelector('i').className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+                setTimeout(() => notification.classList.remove('show'), 3000);
             }
 
-            // Função para filtrar jogos por pesquisa
             function filterGames(searchTerm) {
                 currentSearchTerm = searchTerm.toLowerCase();
                 renderGames();
             }
 
-            // Função para renderizar os jogos
             function renderGames() {
                 gamesList.innerHTML = '';
-                
-                // Filtra os jogos se houver termo de pesquisa
-                let filteredGames = games;
-                if (currentSearchTerm) {
-                    filteredGames = games.filter(game => 
-                        game.name.toLowerCase().includes(currentSearchTerm) || 
-                        (game.description && game.description.toLowerCase().includes(currentSearchTerm))
-                    );
-                }
+                let filteredGames = currentSearchTerm ? games.filter(game =>
+                    game.name.toLowerCase().includes(currentSearchTerm) ||
+                    (game.description && game.description.toLowerCase().includes(currentSearchTerm))
+                ) : games;
 
                 if (filteredGames.length === 0) {
-                    gamesList.innerHTML = `
-                        <div class="no-games">
-                            <i class="fas fa-gamepad"></i>
-                            <h3>${currentSearchTerm ? 'Nenhum jogo encontrado' : 'Nenhum jogo sugerido ainda'}</h3>
-                            <p>${currentSearchTerm ? 'Tente outro termo de pesquisa' : 'Seja o primeiro a sugerir um jogo!'}</p>
-                        </div>
-                    `;
+                    gamesList.innerHTML = `<div class="no-games"><i class="fas fa-gamepad"></i><h3>${currentSearchTerm ? 'Nenhum jogo encontrado' : 'Nenhum jogo sugerido ainda'}</h3><p>${currentSearchTerm ? 'Tente outro termo de pesquisa' : 'Seja o primeiro a sugerir um jogo!'}</p></div>`;
                     return;
                 }
 
-                // Ordena por likes (decrescente)
                 const sortedGames = [...filteredGames].sort((a, b) => b.likes - a.likes);
-                
-                sortedGames.forEach((game, index) => {
+
+                sortedGames.forEach(game => {
                     const gameCard = document.createElement('div');
                     gameCard.className = 'game-card';
                     gameCard.dataset.id = game.id;
-                    
                     gameCard.innerHTML = `
                         ${isAdmin ? `<button class="delete-btn" title="Remover jogo">×</button>` : ''}
                         <h3>${game.name}</h3>
                         ${game.description ? `<p>${game.description}</p>` : ''}
                         <div class="likes">
-                            <button class="like-btn ${game.liked ? 'liked' : ''}" title="Curtir">
-                                <i class="fas fa-heart"></i>
-                            </button>
+                            <button class="like-btn ${game.liked ? 'liked' : ''}" title="Curtir"><i class="fas fa-heart"></i></button>
                             <span>${game.likes} like${game.likes !== 1 ? 's' : ''}</span>
                         </div>
                     `;
-                    
                     gamesList.appendChild(gameCard);
                 });
 
-                // Adiciona eventos aos botões de like
                 document.querySelectorAll('.like-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        const gameId = this.closest('.game-card').dataset.id;
+                    btn.addEventListener('click', () => {
+                        const gameId = btn.closest('.game-card').dataset.id;
                         toggleLike(gameId);
                     });
                 });
 
-                // Adiciona eventos aos botões de deletar (se admin)
                 if (isAdmin) {
                     document.querySelectorAll('.delete-btn').forEach(btn => {
-                        btn.addEventListener('click', function(e) {
+                        btn.addEventListener('click', async e => {
                             e.stopPropagation();
-                            const gameId = this.closest('.game-card').dataset.id;
-                            deleteGame(gameId);
+                            const gameId = btn.closest('.game-card').dataset.id;
+                            if (confirm('Tem certeza que deseja remover este jogo?')) {
+                                try {
+                                    await deleteDoc(doc(window.firebaseDB, "suggestions", gameId));
+                                    games = games.filter(g => g.id !== gameId);
+                                    renderGames();
+                                    showNotification('Jogo removido com sucesso!');
+                                } catch (error) {
+                                    console.error("Erro ao remover jogo:", error);
+                                    showNotification('Erro ao remover jogo!', true);
+                                }
+                            }
                         });
                     });
                 }
             }
 
-            // Função para adicionar um novo jogo
-            function addGame(name, description) {
-                // Verifica se o jogo já existe
-                const gameExists = games.some(
-                    game => game.name.toLowerCase() === name.toLowerCase()
-                );
-                
-                if (gameExists) {
-                    showNotification('Este jogo já foi sugerido!', true);
-                    return;
+            async function addGame(name, description) {
+                const gameExists = games.some(game => game.name.toLowerCase() === name.toLowerCase());
+                if (gameExists) return showNotification('Este jogo já foi sugerido!', true);
+
+                try {
+                    const docRef = await addDoc(collection(window.firebaseDB, "suggestions"), { 
+                        nome: name, 
+                        "descri-loso": description, 
+                        likes: 0 
+                    });
+                    games.push({ id: docRef.id, name, description, likes: 0, liked: false });
+                    renderGames();
+                    gameNameInput.value = '';
+                    gameDescriptionInput.value = '';
+                    showNotification('Jogo adicionado com sucesso!');
+                } catch (err) {
+                    console.error(err);
+                    showNotification('Erro ao adicionar jogo!', true);
                 }
-                
-                const newGame = {
-                    id: Date.now().toString(),
-                    name,
-                    description,
-                    likes: 0,
-                    liked: false
-                };
-                
-                games.push(newGame);
-                saveGames();
-                renderGames();
-                
-                // Limpa os campos do formulário
-                gameNameInput.value = '';
-                gameDescriptionInput.value = '';
-                
-                showNotification('Jogo adicionado com sucesso!');
             }
 
-            // Função para alternar like
-            function toggleLike(gameId) {
-                const gameIndex = games.findIndex(game => game.id === gameId);
-                
-                if (gameIndex !== -1) {
-                    if (games[gameIndex].liked) {
-                        games[gameIndex].likes--;
-                        games[gameIndex].liked = false;
-                    } else {
-                        games[gameIndex].likes++;
-                        games[gameIndex].liked = true;
-                    }
+            async function toggleLike(gameId) {
+                try {
+                    const gameRef = doc(window.firebaseDB, "suggestions", gameId);
+                    const game = games.find(g => g.id === gameId);
                     
-                    saveGames();
-                    renderGames();
+                    if (game) {
+                        const newLikes = game.liked ? game.likes - 1 : game.likes + 1;
+                        await updateDoc(gameRef, { likes: newLikes });
+                        
+                        game.liked = !game.liked;
+                        game.likes = newLikes;
+                        renderGames();
+                    }
+                } catch (error) {
+                    console.error("Erro ao atualizar likes:", error);
+                    showNotification('Erro ao curtir o jogo!', true);
                 }
             }
 
-            // Função para deletar um jogo
-            function deleteGame(gameId) {
-                if (!isAdmin) return;
-                
-                if (confirm('Tem certeza que deseja remover este jogo?')) {
-                    games = games.filter(game => game.id !== gameId);
-                    saveGames();
-                    renderGames();
-                    showNotification('Jogo removido com sucesso!');
-                }
-            }
-
-            // Função para salvar jogos no localStorage
-            function saveGames() {
-                localStorage.setItem('games', JSON.stringify(games));
-            }
-
-            // Função para login admin
             function loginAdmin(username, password) {
                 if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
                     isAdmin = true;
@@ -686,7 +661,6 @@
                 }
             }
 
-            // Função para logout admin
             function logoutAdmin() {
                 isAdmin = false;
                 adminStatus.style.display = 'none';
@@ -694,64 +668,61 @@
                 renderGames();
             }
 
-            // Toggle do painel admin
-            adminIcon.addEventListener('click', function() {
-                adminPanelVisible = !adminPanelVisible;
-                
-                if (adminPanelVisible) {
-                    adminPanel.classList.add('show');
-                } else {
-                    adminPanel.classList.remove('show');
+            async function loadGames() {
+                try {
+                    const querySnapshot = await getDocs(collection(window.firebaseDB, "suggestions"));
+                    games = [];
+                    querySnapshot.forEach(docSnap => {
+                        const data = docSnap.data();
+                        games.push({ 
+                            id: docSnap.id, 
+                            name: data.nome || data.name || '',
+                            description: data['descri-loso'] || data.description || '',
+                            likes: data.likes || 0,
+                            liked: false
+                        });
+                    });
+                    renderGames();
+                } catch (error) {
+                    console.error("Erro ao carregar jogos:", error);
+                    showNotification('Erro ao carregar jogos!', true);
                 }
-            });
+            }
 
             // Event Listeners
-            loginBtn.addEventListener('click', function() {
-                loginAdmin(adminUsername.value.trim(), adminPassword.value.trim());
+            adminIcon.addEventListener('click', () => {
+                adminPanelVisible = !adminPanelVisible;
+                adminPanel.classList.toggle('show', adminPanelVisible);
             });
 
+            loginBtn.addEventListener('click', () => loginAdmin(adminUsername.value.trim(), adminPassword.value.trim()));
             logoutBtn.addEventListener('click', logoutAdmin);
-
-            submitGameBtn.addEventListener('click', function() {
+            
+            submitGameBtn.addEventListener('click', () => {
                 const name = gameNameInput.value.trim();
                 const description = gameDescriptionInput.value.trim();
-                
-                if (name) {
-                    addGame(name, description);
-                } else {
-                    showNotification('Por favor, insira pelo menos o nome do jogo!', true);
-                }
+                if (name) addGame(name, description);
+                else showNotification('Por favor, insira pelo menos o nome do jogo!', true);
             });
 
-            // Pesquisar jogos
-            searchBtn.addEventListener('click', function() {
-                filterGames(searchInput.value.trim());
+            searchBtn.addEventListener('click', () => filterGames(searchInput.value.trim()));
+            searchInput.addEventListener('keypress', e => { 
+                if (e.key === 'Enter') filterGames(searchInput.value.trim()); 
+            });
+            
+            gameNameInput.addEventListener('keypress', e => { 
+                if (e.key === 'Enter') submitGameBtn.click(); 
+            });
+            
+            document.addEventListener('click', e => { 
+                if (!adminPanel.contains(e.target) && e.target !== adminIcon) { 
+                    adminPanelVisible = false; 
+                    adminPanel.classList.remove('show'); 
+                } 
             });
 
-            // Pesquisar ao pressionar Enter
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    filterGames(searchInput.value.trim());
-                }
-            });
-
-            // Permite enviar com Enter no campo de nome
-            gameNameInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    submitGameBtn.click();
-                }
-            });
-
-            // Fechar painel admin ao clicar fora
-            document.addEventListener('click', function(e) {
-                if (!adminPanel.contains(e.target) && e.target !== adminIcon) {
-                    adminPanelVisible = false;
-                    adminPanel.classList.remove('show');
-                }
-            });
-
-            // Renderiza os jogos ao carregar a página
-            renderGames();
+            // Inicialização
+            loadGames();
         });
     </script>
 </body>
