@@ -492,9 +492,11 @@
             getDocs, 
             deleteDoc, 
             doc,
-            updateDoc
+            updateDoc,
+            query,
+            where
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+    
         const firebaseConfig = {
             apiKey: "AIzaSyAbO7QmevH0lPBwbuOtEX0MmaIDacGT2Qg",
             authDomain: "gamesuggest-7a7a0.firebaseapp.com",
@@ -504,7 +506,7 @@
             appId: "1:558925709492:web:7ab9b1a6c84969d22157e1",
             measurementId: "G-3GCY3W0622"
         };
-
+    
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         window.firebaseDB = db;
@@ -609,22 +611,17 @@
             }
 
             async function addGame(name, description) {
-                const gameExists = games.some(game => game.name.toLowerCase() === name.toLowerCase());
-                if (gameExists) return showNotification('Este jogo já foi sugerido!', true);
-            
                 try {
-                    const docRef = await addDoc(collection(window.firebaseDB, "suggestions"), { 
-                        name: name, 
-                        description: description, 
-                        likes: 0 
+                    const docRef = await addDoc(collection(window.firebaseDB, "suggestions"), {
+                        name: name,
+                        description: description,
+                        likes: 0
                     });
                     games.push({ id: docRef.id, name, description, likes: 0, liked: false });
                     renderGames();
-                    gameNameInput.value = '';
-                    gameDescriptionInput.value = '';
                     showNotification('Jogo adicionado com sucesso!');
                 } catch (err) {
-                    console.error(err);
+                    console.error("Erro ao adicionar jogo:", err);
                     showNotification('Erro ao adicionar jogo!', true);
                 }
             }
@@ -674,10 +671,10 @@
                     games = [];
                     querySnapshot.forEach(docSnap => {
                         const data = docSnap.data();
-                        games.push({ 
-                            id: docSnap.id, 
-                            name: data.name || '',
-                            description: data.description || '',
+                        games.push({
+                            id: docSnap.id,
+                            name: data.name,
+                            description: data.description,
                             likes: data.likes || 0,
                             liked: false
                         });
