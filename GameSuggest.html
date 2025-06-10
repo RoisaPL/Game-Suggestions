@@ -611,11 +611,11 @@
             async function addGame(name, description) {
                 const gameExists = games.some(game => game.name.toLowerCase() === name.toLowerCase());
                 if (gameExists) return showNotification('Este jogo já foi sugerido!', true);
-
+            
                 try {
                     const docRef = await addDoc(collection(window.firebaseDB, "suggestions"), { 
-                        nome: name, 
-                        "descri-loso": description, 
+                        name: name, 
+                        description: description, 
                         likes: 0 
                     });
                     games.push({ id: docRef.id, name, description, likes: 0, liked: false });
@@ -676,8 +676,8 @@
                         const data = docSnap.data();
                         games.push({ 
                             id: docSnap.id, 
-                            name: data.nome || data.name || '',
-                            description: data['descri-loso'] || data.description || '',
+                            name: data.name || '',
+                            description: data.description || '',
                             likes: data.likes || 0,
                             liked: false
                         });
@@ -688,7 +688,7 @@
                     showNotification('Erro ao carregar jogos!', true);
                 }
             }
-
+            
             // Event Listeners
             adminIcon.addEventListener('click', () => {
                 adminPanelVisible = !adminPanelVisible;
