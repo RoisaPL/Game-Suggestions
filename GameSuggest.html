@@ -482,36 +482,6 @@
         </section>
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { 
-            getFirestore, 
-            collection, 
-            addDoc, 
-            getDocs, 
-            deleteDoc, 
-            doc,
-            updateDoc,
-            query,
-            where
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-    
-        const firebaseConfig = {
-            apiKey: "AIzaSyAbO7QmevH0lPBwbuOtEX0MmaIDacGT2Qg",
-            authDomain: "gamesuggest-7a7a0.firebaseapp.com",
-            projectId: "gamesuggest-7a7a0",
-            storageBucket: "gamesuggest-7a7a0.appspot.com",
-            messagingSenderId: "558925709492",
-            appId: "1:558925709492:web:7ab9b1a6c84969d22157e1",
-            measurementId: "G-3GCY3W0622"
-        };
-    
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        window.firebaseDB = db;
-    </script>
-
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const adminIcon = document.getElementById('adminIcon');
@@ -533,6 +503,18 @@
             let games = [];
             let adminPanelVisible = false;
             let currentSearchTerm = '';
+
+            // Configurações do GitHub
+            const GITHUB_USERNAME = 'SEU_USUARIO_GITHUB'; // Substitua pelo seu nome de usuário do GitHub
+            const REPO_NAME = 'SEU_REPOSITORIO'; // Substitua pelo nome do seu repositório
+            const DATA_FILE = 'games.json'; // Nome do arquivo que armazenará os dados
+            const GITHUB_TOKEN = ''; // Token de acesso pessoal (deixe vazio se for público)
+            
+            // URL base para a API do GitHub
+            const GITHUB_API_BASE = `https://api.github.com/repos/${GITHUB_USERNAME}/${REPO_NAME}/contents/${DATA_FILE}`;
+            
+            // URL para o arquivo raw (para leitura)
+            const RAW_DATA_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${REPO_NAME}/main/${DATA_FILE}`;
 
             const ADMIN_CREDENTIALS = {
                 username: 'admin',
@@ -596,8 +578,10 @@
                             const gameId = btn.closest('.game-card').dataset.id;
                             if (confirm('Tem certeza que deseja remover este jogo?')) {
                                 try {
-                                    await deleteDoc(doc(window.firebaseDB, "suggestions", gameId));
+                                    // Remove o jogo localmente
                                     games = games.filter(g => g.id !== gameId);
+                                    // Atualiza o arquivo no GitHub
+                                    await updateGitHubData();
                                     renderGames();
                                     showNotification('Jogo removido com sucesso!');
                                 } catch (error) {
@@ -610,14 +594,95 @@
                 }
             }
 
+            // Função para buscar os dados do arquivo JSON no GitHub
+            async function fetchGamesData() {
+                try {
+                    const response = await fetch(RAW_DATA_URL);
+                    if (!response.ok) throw new Error('Falha ao carregar dados');
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error("Erro ao buscar dados:", error);
+                    // Se o arquivo não existir, retorna um array vazio
+                    return [];
+                }
+            }
+
+            // Função para atualizar o arquivo JSON no GitHub
+            async function updateGitHubData() {
+                if (!GITHUB_TOKEN) {
+                    console.error("Token do GitHub não configurado");
+                    showNotification('Erro: Token do GitHub não configurado', true);
+                    return;
+                }
+
+                try {
+                    // Primeiro, obtemos o SHA do arquivo existente (se houver)
+                    let sha = null;
+                    try {
+                        const existingFile = await fetch(GITHUB_API_BASE, {
+                            headers: {
+                                'Authorization': `token ${GITHUB_TOKEN}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        });
+                        
+                        if (existingFile.ok) {
+                            const fileInfo = await existingFile.json();
+                            sha = fileInfo.sha;
+                        }
+                    } catch (e) {
+                        // Arquivo pode não existir ainda
+                    }
+
+                    // Converte os dados para base64
+                    const content = btoa(unescape(encodeURIComponent(JSON.stringify(games, null, 2)));
+                    
+                    // Configura o corpo da requisição
+                    const body = {
+                        message: `Atualização de dados - ${new Date().toISOString()}`,
+                        content: content,
+                        sha: sha // Se sha for null, cria um novo arquivo
+                    };
+
+                    // Faz a requisição para atualizar o arquivo
+                    const response = await fetch(GITHUB_API_BASE, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${GITHUB_TOKEN}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Falha ao atualizar dados no GitHub');
+                    }
+
+                    showNotification('Dados atualizados com sucesso no GitHub!');
+                } catch (error) {
+                    console.error("Erro ao atualizar dados no GitHub:", error);
+                    showNotification('Erro ao atualizar dados no GitHub!', true);
+                }
+            }
+
             async function addGame(name, description) {
                 try {
-                    const docRef = await addDoc(collection(window.firebaseDB, "suggestions"), {
+                    // Cria um novo jogo localmente
+                    const newGame = {
+                        id: Date.now().toString(), // Usa timestamp como ID simples
                         name: name,
                         description: description,
-                        likes: 0
-                    });
-                    games.push({ id: docRef.id, name, description, likes: 0, liked: false });
+                        likes: 0,
+                        liked: false
+                    };
+                    
+                    games.push(newGame);
+                    
+                    // Atualiza o arquivo no GitHub
+                    await updateGitHubData();
+                    
                     renderGames();
                     showNotification('Jogo adicionado com sucesso!');
                 } catch (err) {
@@ -628,15 +693,15 @@
 
             async function toggleLike(gameId) {
                 try {
-                    const gameRef = doc(window.firebaseDB, "suggestions", gameId);
                     const game = games.find(g => g.id === gameId);
                     
                     if (game) {
-                        const newLikes = game.liked ? game.likes - 1 : game.likes + 1;
-                        await updateDoc(gameRef, { likes: newLikes });
-                        
                         game.liked = !game.liked;
-                        game.likes = newLikes;
+                        game.likes = game.liked ? game.likes + 1 : game.likes - 1;
+                        
+                        // Atualiza o arquivo no GitHub
+                        await updateGitHubData();
+                        
                         renderGames();
                     }
                 } catch (error) {
@@ -667,18 +732,8 @@
 
             async function loadGames() {
                 try {
-                    const querySnapshot = await getDocs(collection(window.firebaseDB, "suggestions"));
-                    games = [];
-                    querySnapshot.forEach(docSnap => {
-                        const data = docSnap.data();
-                        games.push({
-                            id: docSnap.id,
-                            name: data.name,
-                            description: data.description,
-                            likes: data.likes || 0,
-                            liked: false
-                        });
-                    });
+                    const data = await fetchGamesData();
+                    games = Array.isArray(data) ? data : [];
                     renderGames();
                 } catch (error) {
                     console.error("Erro ao carregar jogos:", error);
